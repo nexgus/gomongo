@@ -232,13 +232,29 @@ func (m *MongoDB) SetCollections(names ...string) error {
 }
 
 // WaitDatabasePresent waits for the specified database present.
+func (m *MongoDB) WaitCollectionPresent(dbname, collname string) {
+	db := m.client.Database(dbname)
+
+WaitLoop:
+	for {
+		colls, _ := db.ListCollectionNames(m.ctx, bson.M{})
+		for _, coll := range colls {
+			if coll == collname {
+				break WaitLoop
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
+// WaitDatabasePresent waits for the specified database present.
 func (m *MongoDB) WaitDatabasePresent(name string) {
-SearchLoop:
+WaitLoop:
 	for {
 		databases, _ := m.client.ListDatabaseNames(m.ctx, bson.M{})
 		for _, db := range databases {
 			if db == name {
-				break SearchLoop
+				break WaitLoop
 			}
 		}
 		time.Sleep(100 * time.Millisecond)
