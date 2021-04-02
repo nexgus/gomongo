@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -228,4 +229,18 @@ func (m *MongoDB) SetCollections(names ...string) error {
 	}
 
 	return nil
+}
+
+// WaitDatabasePresent waits for the specified database present.
+func (m *MongoDB) WaitDatabasePresent(name string) {
+SearchLoop:
+	for {
+		databases, _ := m.client.ListDatabaseNames(m.ctx, bson.M{})
+		for _, db := range databases {
+			if db == name {
+				break SearchLoop
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
