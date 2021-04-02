@@ -67,6 +67,11 @@ func Open(
 	return m, nil
 }
 
+// Client returns the mongodb client.
+func (m *MongoDB) Client() *mongo.Client {
+	return m.client
+}
+
 // Close disconnects the connection to the server.
 func (m *MongoDB) Close() error {
 	return m.client.Disconnect(m.ctx)
