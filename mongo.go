@@ -143,13 +143,14 @@ func (m *MongoDB) Find(
 	name string,
 	filter interface{},
 	docs *[]map[string]interface{},
+	opts ...*options.FindOptions,
 ) error {
 	coll, ok := m.coll[name]
 	if !ok {
 		return fmt.Errorf("not defined collection %s", name)
 	}
 
-	cursor, err := coll.Find(m.ctx, filter)
+	cursor, err := coll.Find(m.ctx, filter, opts[0])
 	if err != nil {
 		return err
 	}
