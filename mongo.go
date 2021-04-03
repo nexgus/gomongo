@@ -192,19 +192,23 @@ func (m *MongoDB) ReplaceOne(
 	filter interface{},
 	doc interface{},
 	upsert bool,
-) error {
+) (bool, error) {
+	created := false
 	coll, ok := m.coll[name]
 	if !ok {
-		return fmt.Errorf("not defined collection %s", name)
+		return created, fmt.Errorf("not defined collection %s", name)
 	}
 
 	opts := options.Replace().SetUpsert(upsert)
-	_, err := coll.ReplaceOne(m.ctx, filter, doc, opts)
+	result, err := coll.ReplaceOne(m.ctx, filter, doc, opts)
 	if err != nil {
-		return err
+		return created, err
 	}
 
-	return nil
+	if result.UpsertedID != nil {
+		created = true
+	}
+	return created, nil
 }
 
 // Ping sends a ping command to verify that the client can connect to the
