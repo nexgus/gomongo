@@ -40,7 +40,7 @@ func Open(
 			primitive.NewObjectID().Hex(),
 		),
 		connstr: fmt.Sprintf(
-			"mongodb://%s/?readPreference=primary&appname=sensormapapi",
+			"mongodb://%s/?readPreference=primary&appname=gomongo",
 			addr,
 		),
 		coll: make(map[string]*mongo.Collection),
