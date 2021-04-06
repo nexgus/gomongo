@@ -150,7 +150,13 @@ func (m *MongoDB) Find(
 		return fmt.Errorf("not defined collection %s", name)
 	}
 
-	cursor, err := coll.Find(m.ctx, filter, opts[0])
+	var cursor *mongo.Cursor
+	var err error
+	if len(opts) == 0 {
+		cursor, err = coll.Find(m.ctx, filter)
+	} else {
+		cursor, err = coll.Find(m.ctx, filter, opts[0])
+	}
 	if err != nil {
 		return err
 	}
