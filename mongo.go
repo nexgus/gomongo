@@ -88,6 +88,34 @@ func (m *MongoDB) Collections(name string) (*mongo.Collection, error) {
 	return coll, nil
 }
 
+// CollectionAreExisting return a boolt to indicate if all collections are existing.
+func (m *MongoDB) CollectionsAreExisting() bool {
+	if m.client == nil {
+		return false
+	}
+	if m.db == nil {
+		return false
+	}
+	if m.coll == nil {
+		return false
+	}
+	if len(m.coll) == 0 {
+		return false
+	}
+
+	colls, err := m.db.ListCollectionNames(m.ctx, bson.M{})
+	if err != nil {
+		return false
+	}
+	for name := range m.coll {
+		isPresent := inStringSlice(name, colls)
+		if !isPresent {
+			return false
+		}
+	}
+	return true
+}
+
 // Connect establish a connection to server.
 func (m *MongoDB) Connect() error {
 	return m.client.Connect(m.ctx)
@@ -105,6 +133,20 @@ func (m *MongoDB) Database() (*mongo.Database, error) {
 	}
 
 	return m.db, nil
+}
+
+// DatabaseIsExisting return a bool to indicate if a database is existing.
+func (m *MongoDB) DatabaseIsExisting() bool {
+	if m.client == nil {
+		return false
+	}
+	if m.db == nil {
+		return false
+	}
+
+	name := m.db.Name()
+	databases, _ := m.client.ListDatabaseNames(m.ctx, bson.M{})
+	return inStringSlice(name, databases)
 }
 
 // DeleteOne executes a delete command to delete at most one document from
@@ -240,34 +282,4 @@ func (m *MongoDB) SetCollections(names ...string) error {
 	}
 
 	return nil
-}
-
-// WaitDatabasePresent waits for the specified database present.
-func (m *MongoDB) WaitCollectionPresent(dbname, collname string) {
-	db := m.client.Database(dbname)
-
-WaitLoop:
-	for {
-		colls, _ := db.ListCollectionNames(m.ctx, bson.M{})
-		for _, coll := range colls {
-			if coll == collname {
-				break WaitLoop
-			}
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-}
-
-// WaitDatabasePresent waits for the specified database present.
-func (m *MongoDB) WaitDatabasePresent(name string) {
-WaitLoop:
-	for {
-		databases, _ := m.client.ListDatabaseNames(m.ctx, bson.M{})
-		for _, db := range databases {
-			if db == name {
-				break WaitLoop
-			}
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
 }
