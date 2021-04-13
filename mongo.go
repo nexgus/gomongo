@@ -90,7 +90,7 @@ func (m *MongoDB) Collection(name string) (*mongo.Collection, error) {
 }
 
 // Collections returns all collections.
-func (m *MongoDB) Collections(name string) map[string]*mongo.Collection {
+func (m *MongoDB) Collections() map[string]*mongo.Collection {
 	return m.coll
 }
 
