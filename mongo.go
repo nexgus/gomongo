@@ -78,14 +78,19 @@ func (m *MongoDB) Close() error {
 	return m.client.Disconnect(m.ctx)
 }
 
-// Collections returns all collections.
-func (m *MongoDB) Collections(name string) (*mongo.Collection, error) {
+// Collection returns a specified collection.
+func (m *MongoDB) Collection(name string) (*mongo.Collection, error) {
 	coll, ok := m.coll[name]
 	if !ok {
 		return nil, fmt.Errorf("not defined collection %s", name)
 	}
 
 	return coll, nil
+}
+
+// Collections returns all collections.
+func (m *MongoDB) Collections(name string) map[string]*mongo.Collection {
+	return m.coll
 }
 
 // CollectionAreExisting return a boolt to indicate if all collections are existing.
