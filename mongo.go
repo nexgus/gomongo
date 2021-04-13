@@ -31,6 +31,7 @@ type MongoDB struct {
 func Open(
 	ctx context.Context,
 	addr string,
+	appname string,
 	names ...string,
 ) (*MongoDB, error) {
 	m := &MongoDB{
@@ -40,8 +41,8 @@ func Open(
 			primitive.NewObjectID().Hex(),
 		),
 		connstr: fmt.Sprintf(
-			"mongodb://%s/?readPreference=primary&appname=gomongo",
-			addr,
+			"mongodb://%s/?readPreference=primary&appname=%s",
+			addr, appname,
 		),
 		coll: make(map[string]*mongo.Collection),
 	}
