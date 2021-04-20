@@ -132,7 +132,7 @@ func (m *MongoDB) Context() context.Context {
 	return m.ctx
 }
 
-// CreateIndex creates an index on collection name. Order is asscending if order != 0
+// CreateIndex creates an index on collection name.
 func (m *MongoDB) CreateIndex(name, key string, order int) (string, error) {
 	coll, ok := m.coll[name]
 	if !ok {
@@ -140,8 +140,8 @@ func (m *MongoDB) CreateIndex(name, key string, order int) (string, error) {
 	}
 
 	asscending := 1
-	if order == 0 {
-		asscending = 0
+	if order == -1 {
+		asscending = -1
 	}
 
 	model := mongo.IndexModel{
