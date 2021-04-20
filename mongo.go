@@ -132,6 +132,28 @@ func (m *MongoDB) Context() context.Context {
 	return m.ctx
 }
 
+// CreateIndex creates an index on collection name. Order is asscending if order != 0
+func (m *MongoDB) CreateIndex(name, key string, order int) (string, error) {
+	coll, ok := m.coll[name]
+	if !ok {
+		return "", fmt.Errorf("not defined collection %s", name)
+	}
+
+	asscending := 1
+	if order == 0 {
+		asscending = 0
+	}
+
+	model := mongo.IndexModel{
+		Keys:    bson.D{{Key: key, Value: asscending}},
+		Options: options.Index().SetBackground(true),
+	}
+
+	opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
+
+	return coll.Indexes().CreateOne(m.ctx, model, opts)
+}
+
 // Database returns the database.
 func (m *MongoDB) Database() (*mongo.Database, error) {
 	if m.db == nil {
