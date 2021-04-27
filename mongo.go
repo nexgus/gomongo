@@ -145,8 +145,8 @@ func (m *MongoDB) CreateIndex(name, key string, order int) (string, error) {
 	}
 
 	model := mongo.IndexModel{
-		Keys:    bson.D{{Key: key, Value: asscending}},
-		Options: options.Index().SetBackground(true),
+		Keys: bson.D{{Key: key, Value: asscending}},
+		//Options: options.Index().SetBackground(true),
 	}
 
 	opts := options.CreateIndexes().SetMaxTime(2 * time.Second)
@@ -247,6 +247,18 @@ func (m *MongoDB) FindOne(
 	}
 
 	return coll.FindOne(m.ctx, filter).Decode(doc)
+}
+
+// InsertMany executes an insert command to insert multiple documents into the
+// specified collection.
+func (m *MongoDB) InsertMany(name string, docs []interface{}) error {
+	coll, ok := m.coll[name]
+	if !ok {
+		return fmt.Errorf("not defined collection %s", name)
+	}
+
+	_, err := coll.InsertMany(m.ctx, docs)
+	return err
 }
 
 // InsertOne executes an insert command to insert a single document into the
