@@ -180,9 +180,9 @@ func (m *MongoDB) DatabaseIsExisting() bool {
 // DeleteOne executes a delete command to delete at most one document from
 // the specified collection.
 func (m *MongoDB) DeleteOne(name string, filter interface{}) (int64, error) {
-	coll, ok := m.coll[name]
-	if !ok {
-		return -1, fmt.Errorf("not defined collection %s", name)
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return -1, err
 	}
 
 	result, err := coll.DeleteOne(m.ctx, filter)
@@ -196,9 +196,9 @@ func (m *MongoDB) DeleteOne(name string, filter interface{}) (int64, error) {
 // EstimatedDocumentCount gets an estimated of the number of documents in the
 // specified collection.
 func (m *MongoDB) EstimatedDocumentCount(name string) (int64, error) {
-	coll, ok := m.coll[name]
-	if !ok {
-		return -1, fmt.Errorf("not defined collection %s", name)
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return -1, err
 	}
 
 	// specify the MaxTime option to limit the amount of time the operation
@@ -215,13 +215,12 @@ func (m *MongoDB) Find(
 	docs *[]map[string]interface{},
 	opts ...*options.FindOptions,
 ) error {
-	coll, ok := m.coll[name]
-	if !ok {
-		return fmt.Errorf("not defined collection %s", name)
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return err
 	}
 
 	var cursor *mongo.Cursor
-	var err error
 	if len(opts) == 0 {
 		cursor, err = coll.Find(m.ctx, filter)
 	} else {
@@ -241,9 +240,9 @@ func (m *MongoDB) FindOne(
 	filter interface{},
 	doc interface{},
 ) error {
-	coll, ok := m.coll[name]
-	if !ok {
-		return fmt.Errorf("not defined collection %s", name)
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return err
 	}
 
 	return coll.FindOne(m.ctx, filter).Decode(doc)
@@ -252,24 +251,24 @@ func (m *MongoDB) FindOne(
 // InsertMany executes an insert command to insert multiple documents into the
 // specified collection.
 func (m *MongoDB) InsertMany(name string, docs []interface{}) error {
-	coll, ok := m.coll[name]
-	if !ok {
-		return fmt.Errorf("not defined collection %s", name)
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return err
 	}
 
-	_, err := coll.InsertMany(m.ctx, docs)
+	_, err = coll.InsertMany(m.ctx, docs)
 	return err
 }
 
 // InsertOne executes an insert command to insert a single document into the
 // specified collection.
 func (m *MongoDB) InsertOne(name string, doc interface{}) error {
-	coll, ok := m.coll[name]
-	if !ok {
-		return fmt.Errorf("not defined collection %s", name)
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return err
 	}
 
-	_, err := coll.InsertOne(m.ctx, doc)
+	_, err = coll.InsertOne(m.ctx, doc)
 	return err
 }
 
@@ -282,10 +281,10 @@ func (m *MongoDB) ReplaceOne(
 	doc interface{},
 	upsert bool,
 ) (bool, error) {
-	created := false
-	coll, ok := m.coll[name]
-	if !ok {
-		return created, fmt.Errorf("not defined collection %s", name)
+	var created bool
+	coll, err := m.selCollection(name)
+	if err != nil {
+		return created, err
 	}
 
 	opts := options.Replace().SetUpsert(upsert)
@@ -322,4 +321,29 @@ func (m *MongoDB) SetCollections(names ...string) error {
 	}
 
 	return nil
+}
+
+func (m *MongoDB) selCollection(name string) (*mongo.Collection, error) {
+	var (
+		coll *mongo.Collection
+		err  error
+	)
+
+	if len(name) == 0 {
+		if len(m.coll) != 1 {
+			err = fmt.Errorf("must assign collection name while registered collection count is not 1 (one)")
+		} else {
+			for _, coll = range m.coll {
+				break
+			}
+		}
+	} else {
+		if c, ok := m.coll[name]; !ok {
+			err = fmt.Errorf("not defined collection %s", name)
+		} else {
+			coll = c
+		}
+	}
+
+	return coll, err
 }
